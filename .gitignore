@@ -1,3 +1,9 @@
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+/.idea
+/.vscode
+
 /vendor/
 node_modules/
 npm-debug.log
