@@ -53,7 +53,7 @@ services:
     stripe-webhooks:
         image:  stripe/stripe-cli:latest
         container_name: stripe-webhooks
-        command: listen --api-key=pk_test_51JANAVArjxD25Kxn63HeDP3SUv6Znbuow5vWljA4Fe8iZ6TzQPNdwgVgGoTiteemQCMtER6zEz3qHhL8GUB2rBfJ00dFB1Sn5w --forward-to localhost/api/stripe/webhook
+        command: listen --api-key=rk_test_51JANAVArjxD25KxnDOj8GVNUYSEZsYflX5ftKb5EaDAxNgEbtJzpVAed1ctHaL8AaNYgRpDxKqJYmnz8g5YmGiaq00JnutDI4l --forward-to localhost/api/stripe/webhook
         networks:
         - sail
         depends_on:
