@@ -1,68 +1,21 @@
-# For more information: https://laravel.com/docs/sail
-version: '3'
+version: "3.8"
 services:
-    app:
-        build:
-            context: ./vendor/laravel/sail/runtimes/8.0
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP}'
-        image: sail-8.0/app
-        ports:
-            - '${APP_PORT:-80}:80'
-        environment:
-            WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            - mysql
-            - redis
-    mysql:
-        image: 'mysql:8.0'
-        ports:
-            - '${FORWARD_DB_PORT:-3306}:3306'
-        environment:
-            MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
-            MYSQL_DATABASE: '${DB_DATABASE}'
-            MYSQL_USER: '${DB_USERNAME}'
-            MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-        volumes:
-            - 'sailmysql:/var/lib/mysql'
-        networks:
-            - sail
-        healthcheck:
-          test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
-          retries: 3
-          timeout: 5s
-    redis:
-        image: 'redis:alpine'
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
-        volumes:
-            - 'sailredis:/data'
-        networks:
-            - sail
-        healthcheck:
-          test: ["CMD", "redis-cli", "ping"]
-          retries: 3
-          timeout: 5s
-    stripe-webhooks:
-        image:  stripe/stripe-cli:latest
-        container_name: stripe-webhooks
-        command: listen --api-key=rk_test_51JANAVArjxD25KxnDOj8GVNUYSEZsYflX5ftKb5EaDAxNgEbtJzpVAed1ctHaL8AaNYgRpDxKqJYmnz8g5YmGiaq00JnutDI4l --forward-to localhost/api/stripe/webhook
-        networks:
-        - sail
-        depends_on:
-        - app
-networks:
-    sail:
-        driver: bridge
+  db:
+    image: postgres:12-alpine
+    container_name: quickventory-go-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - pgsql-volume:/var/lib/postgresql/data:delegated
+    networks:
+      - quickventory
+
 volumes:
-    sailmysql:
-        driver: local
-    sailredis:
-        driver: local
+  pgsql-volume:
+
+networks:
+  quickventory:
+    driver: bridge
