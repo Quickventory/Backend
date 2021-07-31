@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"main/models"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -33,7 +34,7 @@ func InitDatabase() {
 func migrate(dbInstance *gorm.DB) error {
 	if os.Getenv("env") != "production" {
 		fmt.Println("Migrating database...")
-		return dbInstance.AutoMigrate()
+		return dbInstance.AutoMigrate(models.User{})
 	}
 	return nil
 }
