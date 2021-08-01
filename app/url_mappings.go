@@ -1,7 +1,19 @@
 package app
 
-import "main/controllers"
+import (
+	"main/controllers"
+)
 
 func mapUrls() {
-	router.GET("/users/:user_id", controllers.GetUser)
+	mapUserUrls()
+}
+
+func mapUserUrls() {
+
+	usersGroup := router.Group("api/users")
+	{
+		usersGroup.POST("/login", controllers.Login)
+		usersGroup.POST("/register", controllers.Register)
+	}
+	// router.GET("api/users/:user_id", controllers.GetUser)
 }

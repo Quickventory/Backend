@@ -14,7 +14,6 @@ var (
 func init() {
 	fmt.Println("Initializing the application...")
 	database.InitDatabase()
-
 	router = gin.Default()
 
 }

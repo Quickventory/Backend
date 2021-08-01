@@ -9,7 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDatabase() {
+var db *DB
+
+type DB struct {
+	*gorm.DB // or what database you want like *mongo.Client
+}
+
+func GetDB() *DB {
+	if db == nil {
+		db.DB = InitDatabase()
+	}
+	return db
+}
+
+func InitDatabase() *gorm.DB {
 	fmt.Println("Initializing database...")
 	dns := ""
 	if os.Getenv("env") == "production" {
@@ -17,18 +30,20 @@ func InitDatabase() {
 	} else {
 		dns = "host=0.0.0.0 user=quickventory password=123456 dbname=quickventory port=5432 sslmode=disable TimeZone=America/Toronto"
 	}
-	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
+	var err error
+	db.DB, err = gorm.Open(postgres.Open(dns), &gorm.Config{})
 	if err != nil {
 		panic("Connection to database failed")
 	}
 
-	err = migrate(db)
+	err = migrate(db.DB)
 	if err != nil {
 		fmt.Println("Error migrating database: ", err)
 	} else {
 		fmt.Println("Database migrated successfully")
 	}
 
+	return db.DB
 }
 
 func migrate(dbInstance *gorm.DB) error {
