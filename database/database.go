@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	dbInstance *gorm.DB
+	Database *gorm.DB
 )
 
 func InitDatabase() *gorm.DB {
@@ -22,19 +22,19 @@ func InitDatabase() *gorm.DB {
 		dns = "host=0.0.0.0 user=quickventory password=123456 dbname=quickventory port=5432 sslmode=disable TimeZone=America/Toronto"
 	}
 	var err error
-	dbInstance, err = gorm.Open(postgres.Open(dns), &gorm.Config{})
+	Database, err = gorm.Open(postgres.Open(dns), &gorm.Config{})
 	if err != nil {
 		panic("Connection to database failed")
 	}
 
-	err = migrate(dbInstance)
+	err = migrate(Database)
 	if err != nil {
 		fmt.Println("Error migrating database: ", err)
 	} else {
 		fmt.Println("Database migrated successfully")
 	}
 
-	return dbInstance
+	return Database
 }
 
 func migrate(dbInstance *gorm.DB) error {
