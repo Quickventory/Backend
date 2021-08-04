@@ -28,9 +28,7 @@ func validateRequestHandler(c *gin.Context) {
 			if _, ok := requestValidationName[path]; ok {
 				//check if the gin.context method is in the requestValidationName map
 				if class, ok := requestValidationName[path][c.Request.Method]; ok {
-					if ok, err := utils.Validate(class, c); !ok {
-						c.JSON(400, err)
-					} else {
+					if ok := utils.Validate(class, c); ok {
 						c.Next()
 					}
 				}
