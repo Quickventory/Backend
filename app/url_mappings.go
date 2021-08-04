@@ -8,6 +8,11 @@ import (
 
 func mapUrls() {
 	mapUserUrls()
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to the API",
+		})
+	})
 }
 
 func mapUserUrls() *gin.RouterGroup {
