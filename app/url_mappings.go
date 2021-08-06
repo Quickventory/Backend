@@ -23,6 +23,7 @@ var requestValidationName = map[string]map[string]interface{}{
 
 func validateRequestHandler(c *gin.Context) {
 	// check if gin.context method is "POST", "PUT", "PATCH"
+	// DEV: "GET" is a valid method, but we don't want to validate it except for now, hence why we have !condition and not condition
 	if condition := c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH"; !condition {
 		//get the current route path
 		routePath := c.Request.URL.Path
