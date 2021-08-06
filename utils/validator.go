@@ -7,6 +7,13 @@ import (
 )
 
 func Validate(class interface{}, c *gin.Context) bool {
+
+	// check if the gin.Context body is not json or empty
+	if c.ContentType() != "application/json" || c.Request.Body == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return false
+	}
+
 	if err := c.ShouldBindJSON(&class); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return false

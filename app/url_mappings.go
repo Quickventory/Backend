@@ -4,6 +4,7 @@ import (
 	"main/controllers"
 	"main/requests"
 	"main/utils"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -38,15 +39,17 @@ func validateRequestHandler(c *gin.Context) {
 			}
 			// remove the last "/" from the path
 			path = path[:len(path)-1]
-		} else {
+		} else if len(pathParts) == 3 {
 			//get our third element of pathParts which will be our model name
 			path = pathParts[2]
 
 			// remove our fucking "/" from the path
 			path = strings.TrimRight(path, "/")
-
+		} else {
+			// if we don't have a valid path, we'll just return an error
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
 		}
-
 		// check if the route path is in our requestValidationName map
 		if _, ok := requestValidationName[path]; ok {
 			// check if the current request method is in our requestValidationName map
