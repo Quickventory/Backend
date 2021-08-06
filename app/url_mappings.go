@@ -11,26 +11,47 @@ import (
 
 // create an associative array of names that hold a map of the gin.context method and its request validation
 var requestValidationName = map[string]map[string]interface{}{
-	"users": {
+	"users/foo": {
 		"POST": requests.UserCreateValidationRequest{},
 		"GET":  requests.UserCreateValidationRequest{},
+	},
+
+	"foo": {
+		"GET": requests.UserCreateValidationRequest{},
 	},
 }
 
 func validateRequestHandler(c *gin.Context) {
 	// check if gin.context method is "POST", "PUT", "PATCH"
 	if condition := c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH"; !condition {
-		//loop over gin.Engine registered routes
-		for _, route := range router.Routes() {
-			// split the string of the route.Path to get the second part(the model)
-			path := strings.Split(route.Path, "/")[2]
-			// check if the route.Path is in the requestValidationName map
-			if _, ok := requestValidationName[path]; ok {
-				//check if the gin.context method is in the requestValidationName map
-				if class, ok := requestValidationName[path][c.Request.Method]; ok {
-					if ok := utils.Validate(class, c); ok {
-						c.Next()
-					}
+		//get the current route path
+		routePath := c.Request.URL.Path
+		// split the routepath into a slice of strings
+		pathParts := strings.Split(routePath, "/")
+		// check if len(pathParts) > 3
+		path := ""
+		if len(pathParts) > 3 {
+			// loop over the path parts and concatenate them starting at the second element of our pathParts slice
+			for i := 2; i < len(pathParts); i++ {
+				path += pathParts[i] + "/"
+			}
+			// remove the last "/" from the path
+			path = path[:len(path)-1]
+		} else {
+			//get our third element of pathParts which will be our model name
+			path = pathParts[2]
+
+			// remove our fucking "/" from the path
+			path = strings.TrimRight(path, "/")
+
+		}
+
+		// check if the route path is in our requestValidationName map
+		if _, ok := requestValidationName[path]; ok {
+			// check if the current request method is in our requestValidationName map
+			if class, ok := requestValidationName[path][c.Request.Method]; ok {
+				if ok := utils.Validate(class, c); ok {
+					c.Next()
 				}
 			}
 		}
@@ -51,6 +72,7 @@ func mapUserUrls() *gin.RouterGroup {
 	usersGroup := router.Group("api/users")
 	{
 		usersGroup.POST("/login", controllers.Login)
+		usersGroup.GET("/foo", controllers.Login)
 		// usersGroup.GET("/", controllers.Login)
 		usersGroup.POST("/register", controllers.Register)
 	}
