@@ -5,8 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dgrijalva/jwt-go"
+	"main/database"
+	"main/models"
+	"main/store"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 )
 
@@ -14,7 +18,6 @@ var hmacSampleSecret []byte
 
 func ValidateTokenMiddleware(c *gin.Context) {
 	_ = godotenv.Load(".env")
-	fmt.Println([]byte(os.Getenv("JWT_SECRET")))
 	hmacSampleSecret = []byte(os.Getenv("JWT_SECRET"))
 	// get beaer token from authorization header
 	requestToken := c.Request.Header.Get("Authorization")
@@ -36,7 +39,32 @@ func ValidateTokenMiddleware(c *gin.Context) {
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["foo"], claims["nbf"])
+		// check if user_id claim is in the token
+		if userId, ok := claims["user_id"]; ok {
+			var accessToken models.AccessToken
+			accessTokenRecord := database.Database.Model(&models.AccessToken{}).Where("user_id = ?", userId).First(&accessToken)
+			err := accessTokenRecord.Error
+			if err != nil {
+				c.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+
+			if err != nil {
+				// return JSON exception with error message
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "An exception occured"})
+				return
+			}
+			toCompareToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"user_id": accessToken.UserID,
+			})
+
+			signedToken, _ := toCompareToken.SignedString(hmacSampleSecret)
+
+			if signedToken == requestToken {
+				store.Store.User = accessToken.User
+			}
+		}
+
 	} else {
 		fmt.Println(err)
 	}

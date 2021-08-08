@@ -5,6 +5,7 @@ import (
 	"main/database"
 	"main/middlewares"
 	"main/routes"
+	"main/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,8 @@ var (
 )
 
 func init() {
+	store.Store = store.State{}
+
 	fmt.Println("Initializing the application...")
 	database.InitDatabase()
 	router = gin.Default()

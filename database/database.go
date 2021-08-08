@@ -40,7 +40,7 @@ func InitDatabase() *gorm.DB {
 func migrate(dbInstance *gorm.DB) error {
 	if os.Getenv("env") != "production" {
 		fmt.Println("Migrating database...")
-		return dbInstance.AutoMigrate(models.User{})
+		return dbInstance.AutoMigrate(models.User{}, models.AccessToken{})
 	}
 	return nil
 }
