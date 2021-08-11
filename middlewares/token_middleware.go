@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"main/database"
 	"main/models"
@@ -39,6 +40,15 @@ func ValidateTokenMiddleware(c *gin.Context) {
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// check if expiry is not passed
+		if expiredAt, ok := claims["exp"]; ok {
+			// check if exp is smaller than current time in unix
+			if expiredAt.(int64) <= int64(time.Now().Unix()) {
+				c.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+		}
+
 		// check if user_id claim is in the token
 		if userId, ok := claims["user_id"]; ok {
 			var accessToken models.AccessToken
