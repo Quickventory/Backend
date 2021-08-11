@@ -22,9 +22,9 @@ func ValidateTokenMiddleware(c *gin.Context) {
 	hmacSampleSecret = []byte(os.Getenv("JWT_SECRET"))
 	// get beaer token from authorization header
 	requestToken := c.Request.Header.Get("Authorization")
+
 	if requestToken == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)
-		return
 	}
 
 	requestToken = requestToken[7:] // This slice operation is to remove the "Bearer" string AND the space from the token
@@ -39,13 +39,16 @@ func ValidateTokenMiddleware(c *gin.Context) {
 		return hmacSampleSecret, nil
 	})
 
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// check if expiry is not passed
 		if expiredAt, ok := claims["exp"]; ok {
 			// check if exp is smaller than current time in unix
 			if expiredAt.(int64) <= int64(time.Now().Unix()) {
 				c.AbortWithStatus(http.StatusUnauthorized)
-				return
 			}
 		}
 
@@ -56,7 +59,6 @@ func ValidateTokenMiddleware(c *gin.Context) {
 			err := accessTokenRecord.Error
 			if err != nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
-				return
 			}
 
 			toCompareToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -67,10 +69,13 @@ func ValidateTokenMiddleware(c *gin.Context) {
 
 			if signedToken == requestToken {
 				store.Store.User = accessToken.User
+			} else {
+				c.AbortWithStatus(http.StatusUnauthorized)
 			}
 		}
 
 	} else {
-		fmt.Println(err)
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 }
