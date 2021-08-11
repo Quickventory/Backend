@@ -59,11 +59,6 @@ func ValidateTokenMiddleware(c *gin.Context) {
 				return
 			}
 
-			if err != nil {
-				// return JSON exception with error message
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "An exception occured"})
-				return
-			}
 			toCompareToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 				"user_id": accessToken.UserID,
 			})
