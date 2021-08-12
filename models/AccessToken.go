@@ -8,7 +8,7 @@ import (
 
 type AccessToken struct {
 	gorm.Model
-	UserID    int
+	UserID    uint
 	User      User
 	IssuedAt  time.Time
 	Revoked   bool

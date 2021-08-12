@@ -9,9 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	Database *gorm.DB
-)
+var Database *gorm.DB
 
 func InitDatabase() *gorm.DB {
 	fmt.Println("Initializing database...")

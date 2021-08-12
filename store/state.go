@@ -4,9 +4,7 @@ import (
 	"main/models"
 )
 
-var (
-	Store State
-)
+var Store State
 
 type State struct {
 	User models.User
