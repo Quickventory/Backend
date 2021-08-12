@@ -49,9 +49,11 @@ func Login(c *gin.Context) {
 
 	// create a new access token record and save it
 	accessToken := models.AccessToken{
-		UserID: user.ID,
-		Token:  token.SignedString(hmacSampleSecret),
+		UserID:    user.ID,
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
+
 	database.Database.Create(&accessToken)
 	// sign token
 	tokenString, err := token.SignedString(hmacSampleSecret)
