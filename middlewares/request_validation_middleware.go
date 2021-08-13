@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"main/requests"
 	"main/utils"
 	"net/http"
@@ -11,19 +10,13 @@ import (
 )
 
 var requestValidationName = map[string]map[string]interface{}{
-	"users/foo": {
+	"users/register": {
 		"POST": requests.UserCreateValidationRequest{},
-		"GET":  requests.UserCreateValidationRequest{},
-	},
-
-	"foo": {
-		"GET": requests.UserCreateValidationRequest{},
 	},
 }
 
 func ValidateRequestMiddleware(c *gin.Context) {
 	// check if gin.context method is "POST", "PUT", "PATCH"
-	// DEV: "GET" is a valid method, but we don't want to validate it except for now, hence why we have !condition and not condition
 	if condition := c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH"; condition {
 		//get the current route path
 		routePath := c.Request.URL.Path
@@ -45,7 +38,6 @@ func ValidateRequestMiddleware(c *gin.Context) {
 			// remove our fucking "/" from the path
 			path = strings.TrimRight(path, "/")
 		} else {
-			fmt.Println("uh?")
 			// if we don't have a valid path, we'll just return an error
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
@@ -54,7 +46,7 @@ func ValidateRequestMiddleware(c *gin.Context) {
 		if _, ok := requestValidationName[path]; ok {
 			// check if the current request method is in our requestValidationName map
 			if class, ok := requestValidationName[path][c.Request.Method]; ok {
-				if ok := utils.Validate(class, c); ok {
+				if _, ok := utils.Validate(class, c); ok {
 					c.Next()
 				}
 			}

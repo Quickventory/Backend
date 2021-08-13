@@ -1,6 +1,6 @@
 package requests
 
 type UserCreateValidationRequest struct {
-	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
-	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+	Email    string `json:"email"  binding:"required"`
+	Password string `json:"password" binding:"required"`
 }

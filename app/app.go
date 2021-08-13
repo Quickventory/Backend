@@ -20,9 +20,10 @@ func init() {
 	fmt.Println("Initializing the application...")
 	database.InitDatabase()
 	router = gin.Default()
+	router.Use(middlewares.JsonMiddleware)
 	router.Use(middlewares.ValidateRequestMiddleware)
-	router.Use(middlewares.ValidateTokenMiddleware)
-	routes.RegisterRoutesForV1(router)
+	routes.RegisterPublicRoutesForV1(router)
+	routes.RegisterPrivateRoutesForV1(router)
 }
 
 // StartApp Start...
