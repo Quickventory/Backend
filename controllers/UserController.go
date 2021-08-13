@@ -72,6 +72,5 @@ func Register(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-
 	c.JSON(200, gin.H{"user": store.Store.User})
 }
