@@ -48,7 +48,7 @@ func ValidateTokenMiddleware(c *gin.Context) {
 		// check if expiry is not passed
 		if expiredAt, ok := claims["exp"]; ok {
 			// check if exp is smaller than current time in unix
-			if expiredAt.(int64) <= int64(time.Now().Unix()) {
+			if expiredAt.(float64) <= float64(time.Now().Unix()) {
 				c.AbortWithStatus(http.StatusUnauthorized)
 				return
 			}
@@ -60,20 +60,26 @@ func ValidateTokenMiddleware(c *gin.Context) {
 			accessTokenRecord := database.Database.Model(&models.AccessToken{}).Where("user_id = ?", userId).First(&accessToken)
 			err := accessTokenRecord.Error
 			if err != nil {
-				c.AbortWithStatus(http.StatusUnauthorized)
+				c.AbortWithStatus(404)
 				return
 			}
 
 			toCompareToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 				"user_id": accessToken.UserID,
-				"exp":     int64(accessToken.ExpiresAt.Unix()),
-				"iss":     int64(accessToken.IssuedAt.Unix()),
+				"exp":     accessToken.ExpiresAt.Unix(),
+				"iss":     accessToken.IssuedAt.Unix(),
 			})
 
 			signedToken, _ := toCompareToken.SignedString(hmacSampleSecret)
-
+			var user models.User
+			userRecord := database.Database.Model(&models.User{}).Where("id = ?", accessToken.UserID).First(&user)
+			err = userRecord.Error
+			if err != nil {
+				c.AbortWithStatus(404)
+				return
+			}
 			if signedToken == requestToken {
-				store.Store.User = accessToken.User
+				store.Store.User = user
 			} else {
 				c.AbortWithStatus(http.StatusUnauthorized)
 				return

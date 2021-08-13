@@ -2,13 +2,11 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"main/database"
 	"main/models"
 	"main/requests"
 	"main/store"
 	"main/utils"
-	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -49,15 +47,31 @@ func Login(c *gin.Context) {
 func Register(c *gin.Context) {
 
 	if userValidated, ok := utils.Validate(requests.UserCreateValidationRequest{}, c); ok {
-		user := reflect.ValueOf(requests.UserCreateValidationRequest{}).Elem()
-		n := user.FieldByName("Email").Interface().(string)
-		fmt.Printf("%+v\n", n)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userValidated["password"]), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(400, gin.H{"message": "Exception occured"})
+			return
+		}
+		// create new user
+		user := models.User{
+			Email:     userValidated["email"],
+			Password:  string(hashedPassword),
+			FirstName: "foo",
+			LastName:  "bar",
+		}
 
-		fmt.Println(userValidated.(*requests.UserCreateValidationRequest).Email)
+		database.Database.Create(&user)
+		// create access token for user and save it in database and return it
+		tokenString := utils.GenerateTokenFromUser(&user, c)
+
+		store.Store.User = user
+
+		c.JSON(200, gin.H{"token": tokenString})
 	}
 
 }
 
 func GetUser(c *gin.Context) {
+
 	c.JSON(200, gin.H{"user": store.Store.User})
 }
