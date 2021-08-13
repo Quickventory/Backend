@@ -16,8 +16,8 @@ func GenerateTokenFromUser(user *models.User, c *gin.Context) string {
 	hmacSampleSecret := []byte(os.Getenv("JWT_SECRET"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"exp":     int64(time.Now().Add(time.Hour * 24).Unix()),
-		"iss":     int64(time.Now().Unix()),
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"iss":     time.Now().Unix(),
 	})
 
 	// create a new access token record and save it
