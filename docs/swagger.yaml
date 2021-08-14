@@ -1,4 +1,24 @@
 info:
   contact: {}
-paths: {}
+paths:
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user
+      produces:
+      - application/json
+      summary: Login a user
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a user
+      produces:
+      - application/json
+      summary: Register a user
+      tags:
+      - users
 swagger: "2.0"

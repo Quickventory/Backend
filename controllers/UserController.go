@@ -19,8 +19,6 @@ import (
 // @Tags users
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} c.JSON
-// @Failure 400 {object}  c.JSON
 // @Router /users/login [post]
 func Login(c *gin.Context) {
 	// get email and password from request
@@ -45,8 +43,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON()
-
 	tokenString := utils.GenerateTokenFromUser(&user, c)
 	// log our user in the state and return success
 	store.Store.User = user
@@ -61,9 +57,6 @@ func Login(c *gin.Context) {
 // @Tags users
 // @Accept  json
 // @Produce  json
-// @Param {array} requests.RegisterAccountAndCompanyRequest
-// @Success 200 {object} models.User
-// @Failure 400 {object} httputil.HTTPError
 // @Router /users/register [post]
 func Register(c *gin.Context) {
 
