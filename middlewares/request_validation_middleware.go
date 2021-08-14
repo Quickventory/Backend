@@ -11,7 +11,7 @@ import (
 
 var requestValidationName = map[string]map[string]interface{}{
 	"users/register": {
-		"POST": requests.UserCreateValidationRequest{},
+		"POST": requests.RegisterAccountAndCompanyRequest{},
 	},
 }
 
