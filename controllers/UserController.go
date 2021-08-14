@@ -13,6 +13,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// Login godoc
+// @Summary Login a user
+// @Description Login a user
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} c.JSON
+// @Failure 400 {object}  c.JSON
+// @Router /users/login [post]
 func Login(c *gin.Context) {
 	// get email and password from request
 	var user models.User
@@ -36,6 +45,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	c.JSON()
+
 	tokenString := utils.GenerateTokenFromUser(&user, c)
 	// log our user in the state and return success
 	store.Store.User = user
@@ -44,9 +55,19 @@ func Login(c *gin.Context) {
 
 }
 
+// Register godoc
+// @Summary Register a user
+// @Description Register a user
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param {array} requests.RegisterAccountAndCompanyRequest
+// @Success 200 {object} models.User
+// @Failure 400 {object} httputil.HTTPError
+// @Router /users/register [post]
 func Register(c *gin.Context) {
 
-	if userValidated, ok := utils.Validate(requests.UserCreateValidationRequest{}, c); ok {
+	if userValidated, ok := utils.Validate(requests.RegisterAccountAndCompanyRequest{}, c); ok {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userValidated["password"]), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(400, gin.H{"message": "Exception occured"})
@@ -56,8 +77,8 @@ func Register(c *gin.Context) {
 		user := models.User{
 			Email:     userValidated["email"],
 			Password:  string(hashedPassword),
-			FirstName: "foo",
-			LastName:  "bar",
+			FirstName: userValidated["first_name"],
+			LastName:  userValidated["last_name"],
 		}
 
 		database.Database.Create(&user)
