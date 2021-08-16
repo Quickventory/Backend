@@ -4,31 +4,44 @@ import (
 	"errors"
 	"main/database"
 	"main/models"
-	"main/requests"
-	"main/store"
 	"main/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
+type RegisterAccountAndCompanyRequest struct {
+	Email     string `json:"email"  binding:"required"`
+	Password  string `json:"password" binding:"required"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"  binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 // Login godoc
 // @Summary Login a user
 // @Description Login a user
+// @Param string email
+// @Param string password
 // @Tags users
 // @Accept  json
 // @Produce  json
 // @Router /users/login [post]
 func Login(c *gin.Context) {
-	// get email and password from request
+	var login LoginRequest
 	var user models.User
-	email := c.PostForm("email")
-	password := c.PostForm("password")
-
-	record := database.Database.Model(&models.User{}).Where("email = ?", email).First(&user)
+	if err := c.ShouldBindJSON(&login); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	record := database.Database.Model(&models.User{}).Where("email = ?", login.Email).First(&user)
 	recordErr := record.Error
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(login.Password), bcrypt.DefaultCost)
 
 	if err != nil || errors.Is(recordErr, gorm.ErrRecordNotFound) {
 		// return invalid credentials error
@@ -45,46 +58,59 @@ func Login(c *gin.Context) {
 
 	tokenString := utils.GenerateTokenFromUser(&user, c)
 	// log our user in the state and return success
-	store.Store.User = user
+	c.Set("user", user)
 	// return token
 	c.JSON(200, gin.H{"token": tokenString})
-
 }
 
 // Register godoc
 // @Summary Register a user
 // @Description Register a user
+// @Param string email
+// @Param string password
+// @Param string first_name
+// @Param string last_name
 // @Tags users
 // @Accept  json
 // @Produce  json
 // @Router /users/register [post]
 func Register(c *gin.Context) {
+	var registrationData RegisterAccountAndCompanyRequest
 
-	if userValidated, ok := utils.Validate(requests.RegisterAccountAndCompanyRequest{}, c); ok {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userValidated["password"]), bcrypt.DefaultCost)
-		if err != nil {
-			c.JSON(400, gin.H{"message": "Exception occured"})
-			return
-		}
-		// create new user
-		user := models.User{
-			Email:     userValidated["email"],
-			Password:  string(hashedPassword),
-			FirstName: userValidated["first_name"],
-			LastName:  userValidated["last_name"],
-		}
-
-		database.Database.Create(&user)
-		// create access token for user and save it in database and return it
-		tokenString := utils.GenerateTokenFromUser(&user, c)
-
-		store.Store.User = user
-
-		c.JSON(200, gin.H{"token": tokenString})
+	if err := c.ShouldBindJSON(&registrationData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(registrationData.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(400, gin.H{"message": "Exception occured"})
+		return
+	}
+	// create new user
+	user := models.User{
+		Email:     registrationData.Email,
+		Password:  string(hashedPassword),
+		FirstName: registrationData.FirstName,
+		LastName:  registrationData.LastName,
+	}
+
+	dbErr := database.Database.Create(&user)
+
+	// look for duplicate key value string in error
+	if err := dbErr.Error; err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// create access token for user and save it in database and return it
+	tokenString := utils.GenerateTokenFromUser(&user, c)
+
+	c.Set("user", user)
+
+	c.JSON(200, gin.H{"token": tokenString})
 }
 
 func GetUser(c *gin.Context) {
-	c.JSON(200, gin.H{"user": store.Store.User})
+	// c.JSON(200, gin.H{"user": c.Get("user")Ç
 }
