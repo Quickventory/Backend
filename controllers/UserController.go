@@ -1,14 +1,15 @@
 package controllers
 
 import (
+	"errors"
 	"main/database"
 	"main/models"
-	"main/store"
 	"main/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type RegisterAccountAndCompanyRequest struct {
@@ -26,16 +27,49 @@ type LoginRequest struct {
 // Login godoc
 // @Summary Login a user
 // @Description Login a user
+// @Param string email
+// @Param string password
 // @Tags users
 // @Accept  json
 // @Produce  json
 // @Router /users/login [post]
 func Login(c *gin.Context) {
+	var login LoginRequest
+	var user models.User
+	if err := c.ShouldBindJSON(&login); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	record := database.Database.Model(&models.User{}).Where("email = ?", login.Email).First(&user)
+	recordErr := record.Error
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(login.Password), bcrypt.DefaultCost)
+
+	if err != nil || errors.Is(recordErr, gorm.ErrRecordNotFound) {
+		// return invalid credentials error
+		c.JSON(400, gin.H{"message": "Invalid credentials"})
+		return
+	}
+
+	// check if password matches
+	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.Password)); err != nil {
+		// return invalid credentials error
+		c.JSON(400, gin.H{"message": "Invalid credentials"})
+		return
+	}
+
+	tokenString := utils.GenerateTokenFromUser(&user, c)
+	// log our user in the state and return success
+	c.Set("user", user)
+	// return token
+	c.JSON(200, gin.H{"token": tokenString})
 }
 
 // Register godoc
 // @Summary Register a user
 // @Description Register a user
+// @Param string email
+// @Param string password
+// @Param string first_name
+// @Param string last_name
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -45,6 +79,7 @@ func Register(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&registrationData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(registrationData.Password), bcrypt.DefaultCost)
@@ -60,7 +95,14 @@ func Register(c *gin.Context) {
 		LastName:  registrationData.LastName,
 	}
 
-	database.Database.Create(&user)
+	dbErr := database.Database.Create(&user)
+
+	// look for duplicate key value string in error
+	if err := dbErr.Error; err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	// create access token for user and save it in database and return it
 	tokenString := utils.GenerateTokenFromUser(&user, c)
 
@@ -70,5 +112,5 @@ func Register(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	c.JSON(200, gin.H{"user": store.Store.User})
+	// c.JSON(200, gin.H{"user": c.Get("user")Ç
 }
