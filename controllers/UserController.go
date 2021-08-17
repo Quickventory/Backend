@@ -27,8 +27,6 @@ type LoginRequest struct {
 // Login godoc
 // @Summary Login a user
 // @Description Login a user
-// @Param string email
-// @Param string password
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -66,10 +64,6 @@ func Login(c *gin.Context) {
 // Register godoc
 // @Summary Register a user
 // @Description Register a user
-// @Param string email
-// @Param string password
-// @Param string first_name
-// @Param string last_name
 // @Tags users
 // @Accept  json
 // @Produce  json
